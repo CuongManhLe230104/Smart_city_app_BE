@@ -1,0 +1,13 @@
+appsettings.Development.json
+secrets.json
+*.user
+build/
+.dart_tool/
+.idea/
+.vscode/
+*.iml
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.DS_Store
+Thumbs.db
