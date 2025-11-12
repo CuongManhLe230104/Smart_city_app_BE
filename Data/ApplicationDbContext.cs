@@ -48,6 +48,13 @@ namespace SmartCity_BE.Data
                     Title = "Lễ hội Âm nhạc Bãi Sau",
                     Description = "Cuối tuần này, 20:00, Bãi Sau",
                     ImageUrl = "https://ongvove.com/uploads/0000/17/2024/05/07/le-hoi-am-nhac-bien-vung-tau-la-gi.jpg"
+                },
+                new EventBanner
+                {
+                    Id = 3,
+                    Title = "Hội chợ ẩm thực đường phố",
+                    Description = "Từ 10h-22h hàng ngày, Công viên Bãi Trước",
+                    ImageUrl = "https://topbariavungtauaz.com/wp-content/uploads/2023/09/le-hoi-am-thuc-vung-tau_3.jpg"
                 }
             );
         }
