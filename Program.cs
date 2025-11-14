@@ -1,41 +1,51 @@
+// Program.cs
 using Microsoft.EntityFrameworkCore;
 using SmartCity_BE.Data;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
+using SmartCity_BE.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Đọc chuỗi kết nối từ appsettings.json ---
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// --- 2. Đăng ký DbContext (file ApplicationDbContext của bạn) ---
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-// --- 3. Đăng ký dịch vụ Controllers để chạy API ---
+// Add services to the container.
 builder.Services.AddControllers();
-
-// 4. THÊM DỊCH VỤ HTTPCLIENT (SỬA LỖI 500)
-// (Dòng này bị thiếu, rất quan trọng để Controller gọi API LocationIQ)
-builder.Services.AddHttpClient();
-
-// (Thêm dịch vụ Swagger để test API trên trình duyệt)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHttpClient();
+// JWT Service
+builder.Services.AddScoped<JwtService>();
+
+// CORS configuration chi tiết
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowPostman", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .SetIsOriginAllowed(origin => true); // Cho phép tất cả origins
+    });
+});
 
 var app = builder.Build();
 
-// Cấu hình Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection(); // Tắt Https để test local dễ hơn
+// Thêm middleware để log requests
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"🔍 {context.Request.Method} {context.Request.Path} from {context.Request.Headers.UserAgent}");
+    await next();
+});
 
-// Báo cho app sử dụng các Controllers (API)
+app.UseCors("AllowPostman");
 app.MapControllers();
 
 app.Run();
