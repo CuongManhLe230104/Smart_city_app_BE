@@ -1,5 +1,6 @@
+// Data/ApplicationDbContext.cs
 using Microsoft.EntityFrameworkCore;
-using Smartcity_BE.Models;
+using SmartCity_BE.Models;  // Thêm using này
 
 namespace SmartCity_BE.Data
 {
@@ -11,52 +12,56 @@ namespace SmartCity_BE.Data
         }
 
         // Khai báo các bảng
-        // public DbSet<NguoiDung> NguoiDung { get; set; } = default!;
-        // public DbSet<PhanAnh> PhanAnh { get; set; } = default!;
         public DbSet<BusRoute> BusRoutes { get; set; } = default!;
         public DbSet<EventBanner> EventBanners { get; set; } = default!;
+        public DbSet<User> Users { get; set; } = default!;
+        public DbSet<Feedback> Feedbacks { get; set; } = default!;
 
-        // --- 2. THÊM HÀM OnModelCreating BỊ THIẾU ---
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Thêm dữ liệu mẫu cho 8 tuyến xe buýt
-            modelBuilder.Entity<BusRoute>().HasData(
-                new BusRoute { Id = 1, RouteNumber = "22", RouteName = "Vũng Tàu – Phú Túc (Đồng Nai)", Schedule = "5:00 - 18:00" },
-                new BusRoute { Id = 2, RouteNumber = "6", RouteName = "Vũng Tàu – Phú Mỹ", Schedule = "5:30 - 18:30" },
-                new BusRoute { Id = 3, RouteNumber = "4", RouteName = "Vũng Tàu – Bình Châu", Schedule = "5:00 - 17:30" },
-                new BusRoute { Id = 4, RouteNumber = "15", RouteName = "Xuyên Mộc – Dầu Giây (Đồng Nai)", Schedule = "6:00 - 18:00" },
-                new BusRoute { Id = 5, RouteNumber = "8", RouteName = "Bình Châu – Bình Thuận", Schedule = "5:45 - 17:45" },
-                new BusRoute { Id = 6, RouteNumber = "611 (cũ)", RouteName = "Quốc Lộ 51 – Ngã Tư Vũng Tàu", Schedule = "5:00 - 18:00" },
-                new BusRoute { Id = 7, RouteNumber = "611 (mới)", RouteName = "Vũng Tàu – Ngã Tư Vũng Tàu", Schedule = "5:30 - 18:30" },
-                new BusRoute { Id = 8, RouteNumber = "606", RouteName = "Long Điền – Đồng Nai", Schedule = "5:15 - 18:15" }
-            );
+            // Cấu hình bảng BusRoute
+            modelBuilder.Entity<BusRoute>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RouteNumber).IsRequired().HasMaxLength(10);
+                entity.Property(e => e.RouteName).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Schedule).HasMaxLength(50);
+            });
 
-            modelBuilder.Entity<EventBanner>().HasData(
-                new EventBanner
-                {
-                    Id = 1,
-                    Title = "Chợ quê Kim Bồng",
-                    Description = "15h-22h 11/10/2025 (20 tháng 8 Âm Tịch)",
-                    // Thay thế bằng link ảnh thật của bạn
-                    ImageUrl = "https://happytour.com.vn/public/userfiles/tour/63/449835692_1035433271918761_6419380721802763959_n.jpg"
-                },
-                new EventBanner
-                {
-                    Id = 2,
-                    Title = "Lễ hội Âm nhạc Bãi Sau",
-                    Description = "Cuối tuần này, 20:00, Bãi Sau",
-                    ImageUrl = "https://ongvove.com/uploads/0000/17/2024/05/07/le-hoi-am-nhac-bien-vung-tau-la-gi.jpg"
-                },
-                new EventBanner
-                {
-                    Id = 3,
-                    Title = "Hội chợ ẩm thực đường phố",
-                    Description = "Từ 10h-22h hàng ngày, Công viên Bãi Trước",
-                    ImageUrl = "https://topbariavungtauaz.com/wp-content/uploads/2023/09/le-hoi-am-thuc-vung-tau_3.jpg"
-                }
-            );
+            // Cấu hình bảng EventBanner
+            modelBuilder.Entity<EventBanner>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.ImageUrl).HasMaxLength(500);
+            });
+
+            // Cấu hình bảng User
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
+            });
+            // Cấu hình bảng Feedback
+            modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Status).HasDefaultValue("Pending");
+
+            // Relationship với User
+            entity.HasOne(f => f.User)
+                  .WithMany()
+                  .HasForeignKey(f => f.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
         }
     }
 }

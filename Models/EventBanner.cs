@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Smartcity_BE.Models
+namespace SmartCity_BE.Models
 {
     [Table("EventBanners")]
     public class EventBanner
