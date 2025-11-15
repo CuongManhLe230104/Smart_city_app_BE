@@ -41,7 +41,7 @@ namespace SmartCity_BE.Models
         // Foreign Key
         [Required] // ✅ Thêm Required
         public long UserId { get; set; }
-        
+
         [ForeignKey("UserId")]
         public virtual User? User { get; set; } // ✅ Thêm ? để nullable
 

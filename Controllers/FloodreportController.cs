@@ -74,7 +74,8 @@ namespace SmartCity_BE.Controllers
                 // ✅ Log chi tiết lỗi database
                 _logger.LogError(dbEx, "Database error when creating flood report");
                 var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
-                return BadRequest(new {
+                return BadRequest(new
+                {
                     message = "Lỗi database khi lưu báo cáo",
                     error = innerMessage
                 });
@@ -82,7 +83,8 @@ namespace SmartCity_BE.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating flood report");
-                return BadRequest(new {
+                return BadRequest(new
+                {
                     message = $"Lỗi: {ex.Message}",
                     innerError = ex.InnerException?.Message
                 });
@@ -96,32 +98,42 @@ namespace SmartCity_BE.Controllers
             try
             {
                 var reports = await _context.FloodReports
-                    .Include(r => r.User)
-                    .Where(r => r.Status == "Approved")
-                    .OrderByDescending(r => r.ApprovedAt)
-                    .Select(r => new
+                    .Where(f => f.Status == "Approved")
+                    .OrderByDescending(f => f.CreatedAt)
+                    .Select(f => new
                     {
-                        r.Id,
-                        r.Title,
-                        r.Description,
-                        r.Latitude,
-                        r.Longitude,
-                        r.Address,
-                        r.ImageUrl,
-                        r.WaterLevel,
-                        r.ApprovedAt,
-                        User = new
-                        {
-                            r.User.FullName
-                        }
+                        id = f.Id,
+                        title = f.Title ?? "",  // ✅ Xử lý NULL
+                        description = f.Description ?? "",
+                        waterLevel = f.WaterLevel ?? "Low",
+                        latitude = f.Latitude,
+                        longitude = f.Longitude,
+                        address = f.Address ?? "",
+                        imageUrl = f.ImageUrl ?? "",
+                        userId = f.UserId,
+                        status = f.Status ?? "Pending",
+                        createdAt = f.CreatedAt,
+                        updatedAt = f.UpdatedAt,
+                        approvedAt = f.ApprovedAt
                     })
                     .ToListAsync();
 
-                return Ok(new { message = "Lấy dữ liệu thành công", data = reports });
+                return Ok(new
+                {
+                    success = true,
+                    data = reports
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = $"Lỗi: {ex.Message}" });
+                Console.WriteLine($"❌ Error: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}"
+                });
             }
         }
 
