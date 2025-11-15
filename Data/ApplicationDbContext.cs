@@ -1,6 +1,6 @@
 // Data/ApplicationDbContext.cs
 using Microsoft.EntityFrameworkCore;
-using SmartCity_BE.Models;  // Thêm using này
+using SmartCity_BE.Models;
 
 namespace SmartCity_BE.Data
 {
@@ -16,6 +16,7 @@ namespace SmartCity_BE.Data
         public DbSet<EventBanner> EventBanners { get; set; } = default!;
         public DbSet<User> Users { get; set; } = default!;
         public DbSet<Feedback> Feedbacks { get; set; } = default!;
+        public DbSet<FloodReport> FloodReports { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,21 +48,29 @@ namespace SmartCity_BE.Data
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
             });
+
             // Cấu hình bảng Feedback
             modelBuilder.Entity<Feedback>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Status).HasDefaultValue("Pending");
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Status).HasDefaultValue("Pending");
 
-            // Relationship với User
-            entity.HasOne(f => f.User)
-                  .WithMany()
-                  .HasForeignKey(f => f.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
+                // Relationship với User
+                entity.HasOne(f => f.User)
+                      .WithMany()
+                      .HasForeignKey(f => f.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure FloodReport relationships
+            modelBuilder.Entity<FloodReport>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Không xóa cascade
         }
     }
 }

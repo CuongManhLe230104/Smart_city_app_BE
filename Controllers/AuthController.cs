@@ -106,32 +106,31 @@ namespace SmartCity_BE.Controllers
         {
             try
             {
-                // Tìm user
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-                if (user == null)
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+                if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 {
-                    return BadRequest(new { message = "Email hoặc mật khẩu không đúng" });
+                    return Unauthorized(new { message = "Email hoặc mật khẩu không đúng" });
                 }
 
-                // Verify password
-                if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                {
-                    return BadRequest(new { message = "Email hoặc mật khẩu không đúng" });
-                }
-
-                // Generate JWT token
+                // Tạo JWT token
                 var token = _jwtService.GenerateToken(user);
 
+                // ✅ Response phải có cấu trúc đúng
                 return Ok(new
                 {
-                    message = "Đăng nhập thành công!",
-                    token = token,
-                    user = new
+                    message = "Đăng nhập thành công",
+                    data = new
                     {
-                        user.Id,
-                        user.Email,
-                        user.FullName,
-                        user.PhoneNumber
+                        token = token, // ✅ Phải có token
+                        user = new
+                        {
+                            id = user.Id,
+                            email = user.Email,
+                            fullName = user.FullName,
+                            phoneNumber = user.PhoneNumber
+                        }
                     }
                 });
             }
