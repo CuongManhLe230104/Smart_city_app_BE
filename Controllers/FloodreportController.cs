@@ -139,35 +139,54 @@ namespace SmartCity_BE.Controllers
 
         // 👤 Lấy báo cáo của user
         [HttpGet("my-reports/{userId}")]
-        public async Task<IActionResult> GetMyReports(long userId)
+        public async Task<IActionResult> GetMyReports(int userId, [FromQuery] string? status = null)
         {
             try
             {
-                var reports = await _context.FloodReports
-                    .Where(r => r.UserId == userId)
-                    .OrderByDescending(r => r.CreatedAt)
-                    .Select(r => new
+                var query = _context.FloodReports
+                    .Where(f => f.UserId == userId);
+
+                // Filter theo status nếu có
+                if (!string.IsNullOrEmpty(status))
+                {
+                    query = query.Where(f => f.Status == status);
+                }
+
+                var reports = await query
+                    .OrderByDescending(f => f.CreatedAt)
+                    .Select(f => new
                     {
-                        r.Id,
-                        r.Title,
-                        r.Description,
-                        r.Latitude,
-                        r.Longitude,
-                        r.Address,
-                        r.ImageUrl,
-                        r.WaterLevel,
-                        r.Status,
-                        r.AdminNote,
-                        r.CreatedAt,
-                        r.ApprovedAt
+                        id = f.Id,
+                        title = f.Title ?? "",
+                        description = f.Description ?? "",
+                        waterLevel = f.WaterLevel ?? "Unknown",
+                        latitude = f.Latitude,
+                        longitude = f.Longitude,
+                        address = f.Address ?? "",
+                        imageUrl = f.ImageUrl ?? "",
+                        userId = f.UserId,
+                        status = f.Status ?? "Pending",
+                        adminNote = f.AdminNote ?? "",
+                        createdAt = f.CreatedAt,
+                        updatedAt = f.UpdatedAt,
+                        approvedAt = f.ApprovedAt
                     })
                     .ToListAsync();
 
-                return Ok(new { message = "Lấy danh sách thành công", data = reports });
+                return Ok(new
+                {
+                    success = true,
+                    data = reports
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = $"Lỗi: {ex.Message}" });
+                _logger.LogError(ex, "Error getting user reports");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = $"Lỗi server: {ex.Message}"
+                });
             }
         }
 
@@ -236,7 +255,7 @@ namespace SmartCity_BE.Controllers
             }
         }
 
-        // 🔐 Admin: Duyệt/Từ chối báo cáo
+        // 🔐 Admin: Duyệt báo cáo + Đánh giá mức độ ngập
         [HttpPut("admin/{id}/review")]
         public async Task<IActionResult> ReviewReport(long id, [FromBody] ReviewFloodReportRequest request)
         {
@@ -248,13 +267,33 @@ namespace SmartCity_BE.Controllers
                     return NotFound(new { message = "Không tìm thấy báo cáo" });
                 }
 
+                // ✅ THÊM: Validate WaterLevel
+                var validWaterLevels = new[] { "Low", "Medium", "High", "Critical", "Unknown" };
+                if (!string.IsNullOrEmpty(request.WaterLevel) && !validWaterLevels.Contains(request.WaterLevel))
+                {
+                    return BadRequest(new { message = "WaterLevel phải là: Low, Medium, High, Critical, hoặc Unknown" });
+                }
+
                 report.Status = request.Status;
                 report.AdminNote = request.AdminNote;
+
+                // ✅ THÊM: Cập nhật WaterLevel nếu admin đánh giá
+                if (!string.IsNullOrEmpty(request.WaterLevel))
+                {
+                    report.WaterLevel = request.WaterLevel;
+                }
+
                 report.UpdatedAt = DateTime.Now;
 
                 if (request.Status == "Approved")
                 {
                     report.ApprovedAt = DateTime.Now;
+
+                    // ✅ THÊM: Validate phải có WaterLevel khi duyệt
+                    if (report.WaterLevel == "Unknown")
+                    {
+                        return BadRequest(new { message = "Vui lòng đánh giá mức độ ngập trước khi duyệt!" });
+                    }
                 }
 
                 await _context.SaveChangesAsync();
@@ -266,6 +305,7 @@ namespace SmartCity_BE.Controllers
                     {
                         report.Id,
                         report.Status,
+                        report.WaterLevel,  // ✅ THÊM
                         report.AdminNote,
                         report.ApprovedAt
                     }
@@ -317,5 +357,8 @@ namespace SmartCity_BE.Controllers
 
         [StringLength(500)]
         public string? AdminNote { get; set; }
+
+        // ✅ THÊM: Admin đánh giá mức độ ngập
+        public string? WaterLevel { get; set; } // Low, Medium, High, Critical
     }
 }
