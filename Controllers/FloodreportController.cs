@@ -144,6 +144,7 @@ namespace SmartCity_BE.Controllers
             try
             {
                 var query = _context.FloodReports
+                    .Include(f => f.User)
                     .Where(f => f.UserId == userId);
 
                 // Filter theo status nếu có
@@ -169,7 +170,13 @@ namespace SmartCity_BE.Controllers
                         adminNote = f.AdminNote ?? "",
                         createdAt = f.CreatedAt,
                         updatedAt = f.UpdatedAt,
-                        approvedAt = f.ApprovedAt
+                        approvedAt = f.ApprovedAt,
+                        user = f.User == null ? null : new
+                        {
+                            id = f.User.Id,
+                            fullName = f.User.FullName ?? string.Empty,
+                            email = f.User.Email ?? string.Empty
+                        }
                     })
                     .ToListAsync();
 
