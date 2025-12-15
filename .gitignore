@@ -20,3 +20,5 @@ secrets.json
 *.user
 .DS_Store
 Thumbs.db
+appsettings.json
+firebase-adminsdk.json
