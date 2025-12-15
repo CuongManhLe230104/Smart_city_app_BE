@@ -4,8 +4,9 @@ namespace SmartCity_BE.DTOs
     public class EventBannerDto
     {
         public int Id { get; set; }
-        public string Title { get; set; } = default!;
+        public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string ImageUrl { get; set; } = default!;
+        public string ImageUrl { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 }

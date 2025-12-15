@@ -17,5 +17,6 @@ namespace SmartCity_BE.Models
 
         [Required]
         public string ImageUrl { get; set; } = default!;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

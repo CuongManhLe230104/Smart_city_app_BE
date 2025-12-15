@@ -17,6 +17,8 @@ namespace SmartCity_BE.Data
         public DbSet<User> Users { get; set; } = default!;
         public DbSet<Feedback> Feedbacks { get; set; } = default!;
         public DbSet<FloodReport> FloodReports { get; set; } = default!;
+        public DbSet<TravelTour> TravelTours { get; set; } = default!;
+        public DbSet<Booking> Bookings { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +73,40 @@ namespace SmartCity_BE.Data
                 .WithMany()
                 .HasForeignKey(f => f.UserId)
                 .OnDelete(DeleteBehavior.Restrict); // Không xóa cascade
+
+            // Cấu hình bảng TravelTour
+            modelBuilder.Entity<TravelTour>(entity =>
+            {
+                entity.ToTable("TravelTours"); // Đảm bảo ánh xạ tên bảng đã khai báo trong Model
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.NameTour).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.TourType).IsRequired().HasMaxLength(100);
+
+                // Cấu hình Foreign Key đến User
+                entity.HasOne(t => t.User)
+                      .WithMany()
+                      .HasForeignKey(t => t.UserId)
+                      .OnDelete(DeleteBehavior.Restrict); // Giả định không muốn xóa Tour khi User bị xóa
+            });
+
+            // 3. Cấu hình bảng Booking (Đặt Tour)
+            modelBuilder.Entity<Booking>(entity =>
+            {
+                entity.HasKey(e => e.BookingId); // Giả định Booking có Key là BookingId
+                entity.Property(e => e.Status).HasDefaultValue("Pending");
+
+                // Relationship với User (Người đặt)
+                entity.HasOne(b => b.User)
+                      .WithMany()
+                      .HasForeignKey(b => b.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Relationship với TravelTour
+                entity.HasOne(b => b.Tour)
+                      .WithMany() // Nếu bạn muốn thêm ICollection<Booking> vào Model TravelTour, bạn có thể thay đổi WithMany
+                      .HasForeignKey(b => b.TourId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }

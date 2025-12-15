@@ -14,7 +14,7 @@ namespace SmartCity_BE.Models
         public string Title { get; set; } = default!;
 
         [StringLength(500)]
-        public string? Description { get; set; }
+        public string? Description { get; set; } = "";
 
         [Required]
         public double Latitude { get; set; }
@@ -23,19 +23,19 @@ namespace SmartCity_BE.Models
         public double Longitude { get; set; }
 
         [StringLength(200)]
-        public string? Address { get; set; }
+        public string? Address { get; set; } = "";
 
         [Required]
         [StringLength(500)]
         public string ImageUrl { get; set; } = default!;
 
-        [StringLength(50)]
-        public string WaterLevel { get; set; } = "Unknown";
+        [MaxLength(50)]
+        public string? WaterLevel { get; set; } // Low, Medium, High, Dangerous, Unknown
 
         [StringLength(50)]
-        public string Status { get; set; } = "Pending";
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
 
-        [StringLength(500)]
+        [StringLength(5000)]
         public string? AdminNote { get; set; }
 
         // Foreign Key
@@ -45,7 +45,7 @@ namespace SmartCity_BE.Models
         [ForeignKey("UserId")]
         public virtual User? User { get; set; } // ✅ Thêm ? để nullable
 
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
         public DateTime? ApprovedAt { get; set; }
     }
